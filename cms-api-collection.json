@@ -1,0 +1,821 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "name": "College Management System API",
+    "description": "API collection for the College Management System (CMS) backend. This collection includes endpoints for authentication, student management, teacher management, and admin operations.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "description": "Endpoints for user authentication and account management",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Authenticates a user and returns access and refresh tokens. The tokens are also set as cookies for browser clients."
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "logout"]
+            },
+            "description": "Logs out the current user and clears authentication cookies."
+          },
+          "response": []
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"oldpassword\",\n  \"newPassword\": \"newpassword\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/change-password",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "change-password"]
+            },
+            "description": "Changes the password for the currently authenticated user."
+          },
+          "response": []
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/forgot-password",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "forgot-password"]
+            },
+            "description": "Initiates the password reset process for a user by sending a reset token."
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"newpassword\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/reset-password/{{reset_token}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "reset-password", "{{reset_token}}"]
+            },
+            "description": "Resets a user's password using the provided reset token."
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/refresh-token",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "refresh-token"]
+            },
+            "description": "Generates a new access token using a valid refresh token. The new access token is also set as a cookie for browser clients."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "me"]
+            },
+            "description": "Retrieves information about the currently authenticated user."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Student",
+      "description": "Endpoints for student operations",
+      "item": [
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/student/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "student", "profile"]
+            },
+            "description": "Retrieves the profile information for the currently authenticated student."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"contactNumber\": \"1234567890\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/student/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "student", "profile"]
+            },
+            "description": "Updates the profile information for the currently authenticated student."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Notices",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/student/notices",
+              "host": ["{{base_url}}"],
+              "path": ["api", "student", "notices"]
+            },
+            "description": "Retrieves all notices visible to the currently authenticated student."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Attendance",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/student/attendance",
+              "host": ["{{base_url}}"],
+              "path": ["api", "student", "attendance"]
+            },
+            "description": "Retrieves attendance records for the currently authenticated student."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Attendance Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/student/attendance/summary",
+              "host": ["{{base_url}}"],
+              "path": ["api", "student", "attendance", "summary"]
+            },
+            "description": "Retrieves a summary of attendance statistics for the currently authenticated student."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Teacher",
+      "description": "Endpoints for teacher operations",
+      "item": [
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/teacher/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teacher", "profile"]
+            },
+            "description": "Retrieves the profile information for the currently authenticated teacher."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Smith\",\n  \"contactNumber\": \"9876543210\",\n  \"qualification\": \"PhD in Computer Science\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/teacher/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teacher", "profile"]
+            },
+            "description": "Updates the profile information for the currently authenticated teacher."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Notices",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/teacher/notices",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teacher", "notices"]
+            },
+            "description": "Retrieves all notices visible to the currently authenticated teacher."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Students by Subject",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/teacher/students",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teacher", "students"]
+            },
+            "description": "Retrieves all students enrolled in subjects taught by the currently authenticated teacher."
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Attendance",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subject\": \"60f1a5c5e6b3f32b4c9a1234\",\n  \"date\": \"2023-01-15\",\n  \"students\": [\n    {\n      \"student\": \"60f1a5c5e6b3f32b4c9a5678\",\n      \"status\": \"PRESENT\"\n    },\n    {\n      \"student\": \"60f1a5c5e6b3f32b4c9a9012\",\n      \"status\": \"ABSENT\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/teacher/attendance",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teacher", "attendance"]
+            },
+            "description": "Records attendance for students in a subject taught by the currently authenticated teacher."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Attendance",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"attendanceId\": \"60f1a5c5e6b3f32b4c9a3456\",\n  \"status\": \"PRESENT\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/teacher/attendance",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teacher", "attendance"]
+            },
+            "description": "Updates an existing attendance record for a student."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Class Attendance",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/teacher/attendance?subject={{subject_id}}&date={{date}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "teacher", "attendance"],
+              "query": [
+                {
+                  "key": "subject",
+                  "value": "{{subject_id}}"
+                },
+                {
+                  "key": "date",
+                  "value": "{{date}}"
+                }
+              ]
+            },
+            "description": "Retrieves attendance records for a specific subject and date."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "description": "Endpoints for admin operations",
+      "item": [
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "profile"]
+            },
+            "description": "Retrieves the profile information for the currently authenticated admin."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Admin\",\n  \"lastName\": \"User\",\n  \"contactNumber\": \"5551234567\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "profile"]
+            },
+            "description": "Updates the profile information for the currently authenticated admin."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Students",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/students",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "students"]
+            },
+            "description": "Retrieves a list of all students in the system."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Student",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"New\",\n  \"lastName\": \"Student\",\n  \"email\": \"student@example.com\",\n  \"password\": \"password123\",\n  \"contactNumber\": \"1231231234\",\n  \"rollNumber\": \"S12345\",\n  \"batch\": \"2023\",\n  \"department\": \"Computer Science\",\n  \"semester\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/students",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "students"]
+            },
+            "description": "Creates a new student account in the system."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Student",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Updated\",\n  \"lastName\": \"Student\",\n  \"contactNumber\": \"9879879876\",\n  \"semester\": 2\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/students/{{student_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "students", "{{student_id}}"]
+            },
+            "description": "Updates information for an existing student."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Student",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/students/{{student_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "students", "{{student_id}}"]
+            },
+            "description": "Deletes a student account from the system."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Teachers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/teachers",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "teachers"]
+            },
+            "description": "Retrieves a list of all teachers in the system."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Teacher",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"New\",\n  \"lastName\": \"Teacher\",\n  \"email\": \"teacher@example.com\",\n  \"password\": \"password123\",\n  \"contactNumber\": \"4564564567\",\n  \"employeeId\": \"T12345\",\n  \"department\": \"Computer Science\",\n  \"qualification\": \"PhD in Computer Science\",\n  \"subjects\": [\"Web Development\", \"Database Management\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/teachers",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "teachers"]
+            },
+            "description": "Creates a new teacher account in the system."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Teacher",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Updated\",\n  \"lastName\": \"Teacher\",\n  \"contactNumber\": \"7897897890\",\n  \"qualification\": \"PhD in Computer Engineering\",\n  \"subjects\": [\"Web Development\", \"Database Management\", \"Software Engineering\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/teachers/{{teacher_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "teachers", "{{teacher_id}}"]
+            },
+            "description": "Updates information for an existing teacher."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Teacher",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/teachers/{{teacher_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "teachers", "{{teacher_id}}"]
+            },
+            "description": "Deletes a teacher account from the system."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Notices",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/notices",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "notices"]
+            },
+            "description": "Retrieves a list of all notices in the system."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Notice",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Important Announcement\",\n  \"content\": \"This is an important announcement for all students and faculty.\",\n  \"visibleTo\": [\"STUDENT\", \"TEACHER\"],\n  \"publishDate\": \"2023-01-15T00:00:00.000Z\",\n  \"expiryDate\": \"2023-02-15T00:00:00.000Z\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/notices",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "notices"]
+            },
+            "description": "Creates a new notice in the system."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Notice",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Announcement\",\n  \"content\": \"This is an updated announcement for all students and faculty.\",\n  \"visibleTo\": [\"STUDENT\", \"TEACHER\"],\n  \"expiryDate\": \"2023-03-15T00:00:00.000Z\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/notices/{{notice_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "notices", "{{notice_id}}"]
+            },
+            "description": "Updates an existing notice in the system."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Notice",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/notices/{{notice_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "notices", "{{notice_id}}"]
+            },
+            "description": "Deletes a notice from the system."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Auto-extract tokens from login response",
+          "if (pm.response.code === 200 && pm.request.url.toString().includes('/api/auth/login')) {",
+          "    const responseJson = pm.response.json();",
+          "    if (responseJson.data && responseJson.data.accessToken) {",
+          "        pm.environment.set('access_token', responseJson.data.accessToken);",
+          "        console.log('Access token saved to environment');",
+          "    }",
+          "    if (responseJson.data && responseJson.data.refreshToken) {",
+          "        pm.environment.set('refresh_token', responseJson.data.refreshToken);",
+          "        console.log('Refresh token saved to environment');",
+          "    }",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ]
+}
