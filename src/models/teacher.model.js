@@ -48,7 +48,6 @@ teacherSchema.virtual('fullName').get(function() {
 
 // Index for faster queries
 teacherSchema.index({ department: 1 });
-teacherSchema.index({ teacherId: 1 });
 
 const Teacher = mongoose.model('Teacher', teacherSchema);
 

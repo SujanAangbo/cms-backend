@@ -66,7 +66,6 @@ adminSchema.methods.hasPermissions = function(requiredPermissions) {
 };
 
 // Index for faster queries
-adminSchema.index({ adminId: 1 });
 adminSchema.index({ department: 1 });
 
 const Admin = mongoose.model('Admin', adminSchema);

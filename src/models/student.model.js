@@ -55,8 +55,6 @@ studentSchema.virtual('fullName').get(function() {
 
 // Index for faster queries
 studentSchema.index({ department: 1, semester: 1 });
-studentSchema.index({ studentId: 1 });
-studentSchema.index({ rollNumber: 1 });
 
 const Student = mongoose.model('Student', studentSchema);
 

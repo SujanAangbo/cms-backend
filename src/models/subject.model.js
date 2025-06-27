@@ -72,7 +72,6 @@ const subjectSchema = new mongoose.Schema({
 
 // Index for faster queries
 subjectSchema.index({ department: 1, semester: 1 });
-subjectSchema.index({ code: 1 });
 subjectSchema.index({ teacher: 1 });
 
 // Virtual for student count

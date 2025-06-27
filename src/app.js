@@ -4,7 +4,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const compression = require('compression');
 const cookieParser = require('cookie-parser');
-const { connectDB } = require('./config/database');
+const connectDB = require('./config/database');
 const { errorHandler, notFound } = require('./middlewares/error.middleware');
 
 // Import routes

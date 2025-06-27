@@ -234,3 +234,54 @@ exports.getCurrentUser = asyncHandler(async (req, res) => {
     profile
   });
 });
+
+/**
+ * @desc    Refresh access token using refresh token
+ * @route   POST /api/auth/refresh-token
+ * @access  Private
+ */
+exports.refreshToken = asyncHandler(async (req, res) => {
+  // Get refresh token from cookie
+  const refreshToken = req.cookies.refreshToken;
+  
+  if (!refreshToken) {
+    throw new APIError('No refresh token provided', 401);
+  }
+
+  try {
+    // Verify refresh token
+    const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+    
+    // Check if user still exists
+    const user = await User.findById(decoded.userId);
+    if (!user) {
+      throw new APIError('User not found', 404);
+    }
+
+    if (!user.isActive) {
+      throw new APIError('Your account has been deactivated', 401);
+    }
+
+    // Generate new tokens
+    const tokens = generateTokens(user._id, user.role);
+
+    // Set new cookies
+    res.cookie('accessToken', tokens.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 60 * 60 * 1000 // 1 hour
+    });
+
+    res.cookie('refreshToken', tokens.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+
+    successResponse(res, 200, 'Tokens refreshed successfully', tokens);
+  } catch (error) {
+    throw new APIError('Invalid refresh token', 401);
+  }
+});
