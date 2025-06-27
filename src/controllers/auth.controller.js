@@ -67,8 +67,7 @@ exports.login = asyncHandler(async (req, res) => {
   // Generate tokens
   const tokens = generateTokens(user._id, user.role);
   
-  // Set cookies for browser clients
-  // Set access token cookie - httpOnly for security, secure should be true in production
+  // Set cookies
   res.cookie('accessToken', tokens.accessToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -76,7 +75,6 @@ exports.login = asyncHandler(async (req, res) => {
     maxAge: 60 * 60 * 1000 // 1 hour
   });
   
-  // Set refresh token cookie with longer expiration
   res.cookie('refreshToken', tokens.refreshToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -97,10 +95,8 @@ exports.login = asyncHandler(async (req, res) => {
     userData.profile = profile;
   }
 
-  successResponse(res, 200, 'Login successful', {
-    user: userData,
-    ...tokens // Still include tokens in response for non-browser clients
-  });
+  // Send response without tokens in body
+  successResponse(res, 200, 'Login successful', { user: userData });
 });
 
 /**
@@ -109,10 +105,6 @@ exports.login = asyncHandler(async (req, res) => {
  * @access  Private
  */
 exports.logout = asyncHandler(async (req, res) => {
-  // In a real application, you might want to invalidate the token
-  // This could be done by maintaining a blacklist of invalid tokens
-  // or by using Redis to store invalid tokens until they expire
-  
   // Clear cookies
   res.clearCookie('accessToken');
   res.clearCookie('refreshToken');

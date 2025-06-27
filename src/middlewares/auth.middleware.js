@@ -7,19 +7,11 @@ const User = require('../models/user.model');
  */
 exports.auth = async (req, res, next) => {
   try {
-    let token;
+    // Get token from cookies only
+    const token = req.cookies.accessToken;
     
-    // Check for token in cookies first (for browser clients)
-    if (req.cookies && req.cookies.accessToken) {
-      token = req.cookies.accessToken;
-    } 
-    // Fallback to Authorization header (for API clients)
-    else {
-      const authHeader = req.headers.authorization;
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        throw new APIError('No token provided', 401);
-      }
-      token = authHeader.split(' ')[1];
+    if (!token) {
+      throw new APIError('Please log in to access this resource', 401);
     }
 
     // Verify token
@@ -41,6 +33,8 @@ exports.auth = async (req, res, next) => {
   } catch (error) {
     if (error.name === 'JsonWebTokenError') {
       next(new APIError('Invalid token', 401));
+    } else if (error.name === 'TokenExpiredError') {
+      next(new APIError('Token expired', 401));
     } else {
       next(error);
     }
@@ -104,19 +98,10 @@ exports.checkOwnership = (model) => {
  */
 exports.refreshToken = async (req, res, next) => {
   try {
-    let refreshToken;
-    
-    // Check for refresh token in cookies first (for browser clients)
-    if (req.cookies && req.cookies.refreshToken) {
-      refreshToken = req.cookies.refreshToken;
-    } 
-    // Fallback to request body (for API clients)
-    else {
-      refreshToken = req.body.refreshToken;
-    }
+    const refreshToken = req.cookies.refreshToken;
     
     if (!refreshToken) {
-      throw new APIError('Refresh token is required', 400);
+      throw new APIError('Please log in again', 401);
     }
 
     const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
@@ -133,7 +118,7 @@ exports.refreshToken = async (req, res, next) => {
       { expiresIn: '1h' }
     );
     
-    // Set the new access token as a cookie for browser clients
+    // Set the new access token as a cookie
     res.cookie('accessToken', accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -141,11 +126,16 @@ exports.refreshToken = async (req, res, next) => {
       maxAge: 60 * 60 * 1000 // 1 hour
     });
 
+    // Send success response without including token in body
     res.json({
       status: 'success',
-      data: { accessToken } // Still include token in response for non-browser clients
+      message: 'Access token refreshed successfully'
     });
   } catch (error) {
-    next(error);
+    if (error.name === 'TokenExpiredError') {
+      next(new APIError('Refresh token expired, please log in again', 401));
+    } else {
+      next(error);
+    }
   }
 };
