@@ -5,8 +5,8 @@ const User = require('../models/user.model');
 const defaultAdmin = {
   email: 'admin@cms.com',
   password: 'admin123',
-  firstName: 'System',
-  lastName: 'Administrator',
+  firstName: 'Model Campus Damak',
+  lastName: '',
   role: 'ADMIN',
   isActive: true
 };

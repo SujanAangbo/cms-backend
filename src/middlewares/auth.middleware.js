@@ -1,7 +1,6 @@
 const jwt = require('jsonwebtoken');
 const { APIError } = require('../utils/response.util');
 const User = require('../models/user.model');
-const Admin = require('../models/admin.model');
 
 /**
  * Verify JWT token and attach user to request
@@ -68,38 +67,10 @@ exports.isAdmin = async (req, res, next) => {
     if (req.user.role !== 'ADMIN') {
       throw new APIError('Admin access required', 403);
     }
-
-    const admin = await Admin.findOne({ user: req.user._id });
-    if (!admin) {
-      throw new APIError('Admin profile not found', 403);
-    }
-
-    req.admin = admin;
     next();
   } catch (error) {
     next(error);
   }
-};
-
-/**
- * Check if admin has required permissions
- */
-exports.checkPermissions = (permissions) => {
-  return async (req, res, next) => {
-    try {
-      if (!req.admin) {
-        throw new APIError('Admin profile not found', 403);
-      }
-
-      if (!req.admin.hasPermissions(permissions)) {
-        throw new APIError('Insufficient permissions', 403);
-      }
-
-      next();
-    } catch (error) {
-      next(error);
-    }
-  };
 };
 
 /**

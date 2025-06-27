@@ -1,5 +1,4 @@
-const { asyncHandler, successResponse, APIError, getPagination } = require('../utils/response.util');
-const Admin = require('../models/admin.model');
+const { asyncHandler, successResponse, APIError } = require('../utils/response.util');
 const Student = require('../models/student.model');
 const Teacher = require('../models/teacher.model');
 const User = require('../models/user.model');
@@ -12,11 +11,9 @@ const Attendance = require('../models/attendance.model');
  * @access  Private (Admin)
  */
 exports.getProfile = asyncHandler(async (req, res) => {
-  const admin = await Admin.findOne({ user: req.user._id })
-    .populate('user', '-password')
-    .lean();
+  const admin = await User.findById(req.user._id).select('-password');
 
-  if (!admin) {
+  if (!admin || admin.role !== 'ADMIN') {
     throw new APIError('Admin profile not found', 404);
   }
 
@@ -29,7 +26,7 @@ exports.getProfile = asyncHandler(async (req, res) => {
  * @access  Private (Admin)
  */
 exports.updateProfile = asyncHandler(async (req, res) => {
-  const allowedUpdates = ['designation'];
+  const allowedUpdates = ['firstName', 'lastName', 'image'];
   const updates = Object.keys(req.body)
     .filter(key => allowedUpdates.includes(key))
     .reduce((obj, key) => {
@@ -41,11 +38,11 @@ exports.updateProfile = asyncHandler(async (req, res) => {
     throw new APIError('No valid update fields provided', 400);
   }
 
-  const admin = await Admin.findOneAndUpdate(
-    { user: req.user._id },
+  const admin = await User.findByIdAndUpdate(
+    req.user._id,
     updates,
     { new: true, runValidators: true }
-  ).populate('user', '-password');
+  ).select('-password');
 
   if (!admin) {
     throw new APIError('Admin profile not found', 404);

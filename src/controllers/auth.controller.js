@@ -5,7 +5,6 @@ const { APIError, asyncHandler, successResponse } = require('../utils/response.u
 const User = require('../models/user.model');
 const Student = require('../models/student.model');
 const Teacher = require('../models/teacher.model');
-const Admin = require('../models/admin.model');
 
 /**
  * Generate JWT tokens
@@ -50,7 +49,7 @@ exports.login = asyncHandler(async (req, res) => {
     throw new APIError('Your account has been deactivated', 401);
   }
 
-  // Get role-specific profile
+  // Get role-specific profile for students and teachers
   let profile;
   switch (user.role) {
     case 'STUDENT':
@@ -58,9 +57,6 @@ exports.login = asyncHandler(async (req, res) => {
       break;
     case 'TEACHER':
       profile = await Teacher.findOne({ user: user._id });
-      break;
-    case 'ADMIN':
-      profile = await Admin.findOne({ user: user._id });
       break;
   }
 
@@ -88,15 +84,21 @@ exports.login = asyncHandler(async (req, res) => {
     maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
   });
 
+  const userData = {
+    _id: user._id,
+    email: user.email,
+    role: user.role,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    image: user.image
+  };
+
+  if (profile) {
+    userData.profile = profile;
+  }
+
   successResponse(res, 200, 'Login successful', {
-    user: {
-      _id: user._id,
-      email: user.email,
-      role: user.role,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      profile
-    },
+    user: userData,
     ...tokens // Still include tokens in response for non-browser clients
   });
 });
@@ -219,9 +221,6 @@ exports.getCurrentUser = asyncHandler(async (req, res) => {
       break;
     case 'TEACHER':
       profile = await Teacher.findOne({ user: req.user._id });
-      break;
-    case 'ADMIN':
-      profile = await Admin.findOne({ user: req.user._id });
       break;
   }
 
