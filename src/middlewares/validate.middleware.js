@@ -8,10 +8,10 @@ const { APIError } = require('../utils/response.util');
 exports.validateRequest = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    const formattedErrors = errors.array().map(error => ({
-      field: error.param,
-      message: error.msg
-    }));
+    const formattedErrors = {};
+    errors.array().forEach(error => {
+      formattedErrors[error.param] = error.msg;
+    });
     throw new APIError('Validation failed', 400, formattedErrors);
   }
   next();

@@ -3,6 +3,7 @@ const { body } = require('express-validator');
 const adminController = require('../controllers/admin.controller');
 const { auth, checkRole, checkPermissions } = require('../middlewares/auth.middleware');
 const { validateRequest, validateDateRange, validateObjectId, validatePagination } = require('../middlewares/validate.middleware');
+const Student = require('../models/student.model');
 
 const router = express.Router();
 
@@ -42,22 +43,30 @@ router.post(
       .withMessage('Password must be at least 6 characters long'),
     body('firstName').trim().notEmpty().withMessage('First name is required'),
     body('lastName').trim().notEmpty().withMessage('Last name is required'),
-    body('studentId').trim().notEmpty().withMessage('Student ID is required'),
     body('department').trim().notEmpty().withMessage('Department is required'),
     body('semester')
       .isInt({ min: 1, max: 8 })
       .withMessage('Semester must be between 1 and 8'),
     body('year')
-      .isInt({ min: 1, max: 4 })
-      .withMessage('Year must be between 1 and 4'),
-    body('rollNumber').trim().notEmpty().withMessage('Roll number is required'),
-    body('dateOfBirth').optional().isISO8601().toDate(),
-    body('address').optional().trim(),
-    body('parentContact')
+      .isInt({ min: 1 })
+      .withMessage('Year is required and must be a positive number'),
+    body('rollNumber')
+      .trim()
+      .notEmpty()
+      .withMessage('Roll number is required')
+      .custom(async (value) => {
+        const exists = await Student.findOne({ rollNumber: value });
+        if (exists) {
+          throw new Error('Roll number already exists');
+        }
+        return true;
+      }),
+    body('contactNumber')
       .optional()
       .matches(/^\+?[1-9]\d{1,14}$/)
       .withMessage('Invalid phone number format'),
-    body('admissionDate').optional().isISO8601().toDate()
+    body('dateOfBirth').optional().isISO8601().toDate(),
+    body('address').optional().trim()
   ],
   validateRequest,
   adminController.createStudent
@@ -106,14 +115,17 @@ router.post(
       .withMessage('Password must be at least 6 characters long'),
     body('firstName').trim().notEmpty().withMessage('First name is required'),
     body('lastName').trim().notEmpty().withMessage('Last name is required'),
-    body('teacherId').trim().notEmpty().withMessage('Teacher ID is required'),
     body('department').trim().notEmpty().withMessage('Department is required'),
     body('designation').trim().notEmpty().withMessage('Designation is required'),
     body('qualification').trim().notEmpty().withMessage('Qualification is required'),
     body('experience')
+      .optional()
       .isInt({ min: 0 })
-      .withMessage('Experience must be a positive number'),
-    body('joiningDate').isISO8601().toDate().withMessage('Invalid joining date')
+      .withMessage('Experience must be a non-negative number'),
+    body('contactNumber')
+      .optional()
+      .matches(/^\+?[1-9]\d{1,14}$/)
+      .withMessage('Invalid phone number format')
   ],
   validateRequest,
   adminController.createTeacher
