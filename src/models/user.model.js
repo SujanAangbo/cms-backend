@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 
 const userSchema = new mongoose.Schema({
   email: {
@@ -12,7 +13,8 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: [true, 'Password is required'],
-    minlength: 6
+    minlength: 6,
+    select: false
   },
   role: {
     type: String,
@@ -28,6 +30,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Last name is required'],
     trim: true
+  },
+  image: {
+    type: String,
+    default: null
   },
   phone: {
     type: String,
@@ -60,6 +66,17 @@ userSchema.pre('save', async function(next) {
   next();
 });
 
+// Ensure only one admin exists
+userSchema.pre('save', async function(next) {
+  if (this.role === 'ADMIN') {
+    const adminExists = await this.constructor.exists({ role: 'ADMIN', _id: { $ne: this._id } });
+    if (adminExists) {
+      throw new Error('Only one admin is allowed in the system');
+    }
+  }
+  next();
+});
+
 // Method to compare password
 userSchema.methods.comparePassword = async function(candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
@@ -77,6 +94,11 @@ userSchema.methods.createPasswordResetToken = function() {
   this.passwordResetExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
   
   return resetToken;
+};
+
+// Static method to get admin
+userSchema.statics.getAdmin = function() {
+  return this.findOne({ role: 'ADMIN' });
 };
 
 const User = mongoose.model('User', userSchema);
