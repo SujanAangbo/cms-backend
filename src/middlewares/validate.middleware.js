@@ -10,9 +10,13 @@ exports.validateRequest = (req, res, next) => {
   if (!errors.isEmpty()) {
     const formattedErrors = {};
     errors.array().forEach(error => {
-      formattedErrors[error.param] = error.msg;
+      formattedErrors[error.path] = error.msg;
     });
-    throw new APIError('Validation failed', 400, formattedErrors);
+    return res.status(400).json({
+      status: 'error',
+      message: 'Validation failed',
+      errors: formattedErrors
+    });
   }
   next();
 };

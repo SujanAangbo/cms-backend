@@ -9,7 +9,6 @@ const teacherSchema = new mongoose.Schema({
   },
   teacherId: {
     type: String,
-    required: true,
     unique: true
   },
   department: {
@@ -33,10 +32,10 @@ const teacherSchema = new mongoose.Schema({
     required: true,
     default: Date.now
   },
-  subjects: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Subject'
-  }]
+  subjects: {
+    type: [String],
+    default: []
+  }
 }, {
   timestamps: true
 });
@@ -44,6 +43,27 @@ const teacherSchema = new mongoose.Schema({
 // Virtual for full name
 teacherSchema.virtual('fullName').get(function() {
   return `${this.user.firstName} ${this.user.lastName}`;
+});
+
+// Pre-save middleware to generate teacherId
+teacherSchema.pre('save', async function(next) {
+  if (!this.teacherId) {
+    // Find the highest existing teacherId
+    const highestTeacher = await this.constructor.findOne({}, { teacherId: 1 })
+      .sort({ teacherId: -1 })
+      .lean();
+
+    let nextNumber = 1;
+    if (highestTeacher && highestTeacher.teacherId) {
+      // Extract the number from existing highest teacherId (e.g., "TCH001" -> 1)
+      const currentNumber = parseInt(highestTeacher.teacherId.replace('TCH', ''));
+      nextNumber = currentNumber + 1;
+    }
+
+    // Generate the new teacherId with padding (e.g., 1 -> "TCH001")
+    this.teacherId = `TCH${nextNumber.toString().padStart(3, '0')}`;
+  }
+  next();
 });
 
 // Index for faster queries

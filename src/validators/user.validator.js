@@ -39,19 +39,50 @@ const validateRegistration = [
     .isIn(['student', 'teacher', 'admin'])
     .withMessage('Invalid role'),
 
-  // Conditional validation based on role
-  body('studentId')
+  // Student-specific validations
+  body('department')
+    .if(body('role').equals('student'))
+    .trim()
+    .notEmpty()
+    .withMessage('Department is required for students'),
+
+  body('semester')
     .if(body('role').equals('student'))
     .notEmpty()
-    .withMessage('Student ID is required for students')
-    .trim(),
+    .withMessage('Semester is required for students')
+    .isInt({ min: 1 })
+    .withMessage('Semester must be a positive number'),
 
-  body('grade')
+  body('year')
     .if(body('role').equals('student'))
     .notEmpty()
-    .withMessage('Grade is required for students')
+    .withMessage('Year is required for students')
+    .isInt({ min: 1 })
+    .withMessage('Year must be a positive number'),
+
+  body('rollNumber')
+    .if(body('role').equals('student'))
+    .trim()
+    .notEmpty()
+    .withMessage('Roll number is required for students'),
+
+  body('dateOfBirth')
+    .if(body('role').equals('student'))
+    .optional()
+    .isISO8601()
+    .withMessage('Invalid date format for date of birth'),
+
+  body('address')
+    .if(body('role').equals('student'))
+    .optional()
     .trim(),
 
+  body('parentContact')
+    .if(body('role').equals('student'))
+    .optional()
+    .trim(),
+
+  // Teacher-specific validations
   body('teacherId')
     .if(body('role').equals('teacher'))
     .notEmpty()

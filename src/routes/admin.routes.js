@@ -4,6 +4,7 @@ const adminController = require('../controllers/admin.controller');
 const { auth, checkRole, checkPermissions } = require('../middlewares/auth.middleware');
 const { validateRequest, validateDateRange, validateObjectId, validatePagination } = require('../middlewares/validate.middleware');
 const Student = require('../models/student.model');
+const { upload } = require('../utils/upload.util');
 
 const router = express.Router();
 
@@ -36,20 +37,45 @@ router.get(
 
 router.post(
   '/students',
+  upload.single('image'),
   [
-    body('email').isEmail().withMessage('Invalid email address'),
+    // User account fields
+    body('email')
+      .trim()
+      .notEmpty()
+      .withMessage('Email is required')
+      .isEmail()
+      .withMessage('Invalid email address'),
     body('password')
+      .trim()
+      .notEmpty()
+      .withMessage('Password is required')
       .isLength({ min: 6 })
       .withMessage('Password must be at least 6 characters long'),
-    body('firstName').trim().notEmpty().withMessage('First name is required'),
-    body('lastName').trim().notEmpty().withMessage('Last name is required'),
-    body('department').trim().notEmpty().withMessage('Department is required'),
+    body('firstName')
+      .trim()
+      .notEmpty()
+      .withMessage('First name is required'),
+    body('lastName')
+      .trim()
+      .notEmpty()
+      .withMessage('Last name is required'),
+    
+    // Student profile fields
+    body('department')
+      .trim()
+      .notEmpty()
+      .withMessage('Department is required'),
     body('semester')
-      .isInt({ min: 1, max: 8 })
-      .withMessage('Semester must be between 1 and 8'),
-    body('year')
+      .notEmpty()
+      .withMessage('Semester is required')
       .isInt({ min: 1 })
-      .withMessage('Year is required and must be a positive number'),
+      .withMessage('Semester must be a positive number'),
+    body('year')
+      .notEmpty()
+      .withMessage('Year is required')
+      .isInt()
+      .withMessage('Year must be a number'),
     body('rollNumber')
       .trim()
       .notEmpty()
@@ -61,12 +87,21 @@ router.post(
         }
         return true;
       }),
-    body('contactNumber')
+    
+    // Optional fields
+    body('dateOfBirth')
       .optional()
+      .isISO8601()
+      .toDate()
+      .withMessage('Invalid date format'),
+    body('address')
+      .optional()
+      .trim(),
+    body('parentContact')
+      .optional()
+      .trim()
       .matches(/^\+?[1-9]\d{1,14}$/)
-      .withMessage('Invalid phone number format'),
-    body('dateOfBirth').optional().isISO8601().toDate(),
-    body('address').optional().trim()
+      .withMessage('Invalid phone number format')
   ],
   validateRequest,
   adminController.createStudent
@@ -74,18 +109,20 @@ router.post(
 
 router.put(
   '/students/:id',
+  upload.single('image'),
   [
     validateObjectId,
     body('firstName').optional().trim().notEmpty(),
     body('lastName').optional().trim().notEmpty(),
     body('department').optional().trim().notEmpty(),
-    body('semester').optional().isInt({ min: 1, max: 8 }),
-    body('year').optional().isInt({ min: 1, max: 4 }),
+    body('semester').optional().isInt({ min: 1 }),
+    body('year').optional().isInt(),
     body('rollNumber').optional().trim().notEmpty(),
     body('dateOfBirth').optional().isISO8601().toDate(),
     body('address').optional().trim(),
     body('parentContact')
       .optional()
+      .trim()
       .matches(/^\+?[1-9]\d{1,14}$/)
       .withMessage('Invalid phone number format')
   ],
@@ -108,22 +145,59 @@ router.get(
 
 router.post(
   '/teachers',
+  upload.single('image'),
   [
-    body('email').isEmail().withMessage('Invalid email address'),
+    // User account fields
+    body('email')
+      .trim()
+      .notEmpty()
+      .withMessage('Email is required')
+      .isEmail()
+      .withMessage('Invalid email address'),
     body('password')
+      .trim()
+      .notEmpty()
+      .withMessage('Password is required')
       .isLength({ min: 6 })
       .withMessage('Password must be at least 6 characters long'),
-    body('firstName').trim().notEmpty().withMessage('First name is required'),
-    body('lastName').trim().notEmpty().withMessage('Last name is required'),
-    body('department').trim().notEmpty().withMessage('Department is required'),
-    body('designation').trim().notEmpty().withMessage('Designation is required'),
-    body('qualification').trim().notEmpty().withMessage('Qualification is required'),
+    body('firstName')
+      .trim()
+      .notEmpty()
+      .withMessage('First name is required'),
+    body('lastName')
+      .trim()
+      .notEmpty()
+      .withMessage('Last name is required'),
+    
+    // Teacher profile fields
+    body('department')
+      .trim()
+      .notEmpty()
+      .withMessage('Department is required'),
+    body('designation')
+      .trim()
+      .notEmpty()
+      .withMessage('Designation is required'),
+    body('qualification')
+      .trim()
+      .notEmpty()
+      .withMessage('Qualification is required'),
     body('experience')
       .optional()
       .isInt({ min: 0 })
       .withMessage('Experience must be a non-negative number'),
+    body('subjects')
+      .optional()
+      .isArray()
+      .withMessage('Subjects must be an array'),
+    body('subjects.*')
+      .optional()
+      .trim()
+      .notEmpty()
+      .withMessage('Subject names cannot be empty'),
     body('contactNumber')
       .optional()
+      .trim()
       .matches(/^\+?[1-9]\d{1,14}$/)
       .withMessage('Invalid phone number format')
   ],
@@ -161,9 +235,16 @@ router.get(
 
 router.post(
   '/notices',
+  upload.array('attachments', 5), // Allow up to 5 attachments
   [
-    body('title').trim().notEmpty().withMessage('Title is required'),
-    body('content').trim().notEmpty().withMessage('Content is required'),
+    body('title')
+      .trim()
+      .notEmpty()
+      .withMessage('Title is required'),
+    body('content')
+      .trim()
+      .notEmpty()
+      .withMessage('Content is required'),
     body('targetAudience')
       .isIn(['ALL', 'STUDENTS', 'TEACHERS', 'DEPARTMENT'])
       .withMessage('Invalid target audience'),
@@ -191,6 +272,7 @@ router.post(
 
 router.put(
   '/notices/:id',
+  upload.array('attachments', 5), // Allow up to 5 attachments
   [
     validateObjectId,
     body('title').optional().trim().notEmpty(),
@@ -198,10 +280,24 @@ router.put(
     body('targetAudience')
       .optional()
       .isIn(['ALL', 'STUDENTS', 'TEACHERS', 'DEPARTMENT']),
-    body('department').optional(),
-    body('priority').optional().isIn(['LOW', 'MEDIUM', 'HIGH']),
-    body('isActive').optional().isBoolean(),
-    body('expiryDate').optional().isISO8601().toDate()
+    body('department')
+      .optional()
+      .custom((value, { req }) => {
+        if (req.body.targetAudience === 'DEPARTMENT' && !value) {
+          throw new Error('Department is required for department-specific notices');
+        }
+        return true;
+      }),
+    body('priority')
+      .optional()
+      .isIn(['LOW', 'MEDIUM', 'HIGH']),
+    body('expiryDate')
+      .optional()
+      .isISO8601()
+      .toDate(),
+    body('isActive')
+      .optional()
+      .isBoolean()
   ],
   validateRequest,
   adminController.updateNotice

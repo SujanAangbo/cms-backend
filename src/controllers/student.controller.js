@@ -65,7 +65,6 @@ exports.getNotices = asyncHandler(async (req, res) => {
   
   const query = {
     isActive: true,
-    expiryDate: { $gt: new Date() },
     $or: [
       { targetAudience: 'ALL' },
       { targetAudience: 'STUDENTS' },
@@ -75,6 +74,17 @@ exports.getNotices = asyncHandler(async (req, res) => {
       }
     ]
   };
+
+  // Add expiry date check only if it exists
+  query.$and = [
+    {
+      $or: [
+        { expiryDate: { $exists: false } },
+        { expiryDate: null },
+        { expiryDate: { $gt: new Date() } }
+      ]
+    }
+  ];
 
   const notices = await Notice.find(query)
     .sort({ priority: -1, createdAt: -1 })

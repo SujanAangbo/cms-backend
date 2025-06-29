@@ -4,6 +4,8 @@ const Teacher = require('../models/teacher.model');
 const User = require('../models/user.model');
 const Notice = require('../models/notice.model');
 const Attendance = require('../models/attendance.model');
+const mongoose = require('mongoose');
+const { deleteFile } = require('../utils/upload.util');
 
 /**
  * @desc    Get admin profile
@@ -71,26 +73,91 @@ exports.getStudents = asyncHandler(async (req, res) => {
 });
 
 exports.createStudent = asyncHandler(async (req, res) => {
-  const { email, password, firstName, lastName, ...studentData } = req.body;
+  const { email, password, firstName, lastName, rollNumber, ...studentData } = req.body;
 
-  // Create user account
-  const user = await User.create({
-    email,
-    password,
-    firstName,
-    lastName,
-    role: 'STUDENT'
-  });
+  // First check if email exists
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    // If user exists, check if they already have a student profile
+    const existingStudent = await Student.findOne({ user: existingUser._id });
+    if (existingStudent) {
+      // Delete uploaded file if exists
+      if (req.file) {
+        deleteFile(req.file.path);
+      }
+      throw new APIError('Email already registered as a student', 400);
+    }
+    // If no student profile, we'll update the user later
+  }
 
-  // Create student profile
-  const student = await Student.create({
-    user: user._id,
-    ...studentData
-  });
+  // Check if roll number exists
+  const existingRollNumber = await Student.findOne({ rollNumber });
+  if (existingRollNumber) {
+    // Delete uploaded file if exists
+    if (req.file) {
+      deleteFile(req.file.path);
+    }
+    throw new APIError('Roll number already exists', 400);
+  }
 
-  successResponse(res, 201, 'Student created successfully', {
-    student: await student.populate('user', '-password')
-  });
+  // Start a transaction
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    let user;
+    if (existingUser) {
+      // Update existing user
+      user = await User.findByIdAndUpdate(
+        existingUser._id,
+        {
+          firstName,
+          lastName,
+          password, // Note: password will be hashed by the User model pre-save middleware
+          role: 'STUDENT',
+          image: req.file ? req.file.path.replace('public/', '') : existingUser.image
+        },
+        { new: true, session }
+      );
+    } else {
+      // Create new user
+      user = await User.create([{
+        email,
+        password,
+        firstName,
+        lastName,
+        role: 'STUDENT',
+        image: req.file ? req.file.path.replace('public/', '') : null
+      }], { session });
+      user = user[0]; // Create returns an array when used with session
+    }
+
+    // Create student profile
+    const student = await Student.create([{
+      user: user._id,
+      rollNumber,
+      ...studentData
+    }], { session });
+
+    // Commit the transaction
+    await session.commitTransaction();
+
+    // Get the complete student data with populated user
+    const populatedStudent = await Student.findById(student[0]._id)
+      .populate('user', '-password');
+
+    successResponse(res, 201, 'Student created successfully', { student: populatedStudent });
+  } catch (error) {
+    // If anything fails, abort the transaction and delete uploaded file
+    await session.abortTransaction();
+    if (req.file) {
+      deleteFile(req.file.path);
+    }
+    throw error;
+  } finally {
+    // End the session
+    session.endSession();
+  }
 });
 
 exports.updateStudent = asyncHandler(async (req, res) => {
@@ -149,26 +216,93 @@ exports.getTeachers = asyncHandler(async (req, res) => {
 });
 
 exports.createTeacher = asyncHandler(async (req, res) => {
-  const { email, password, firstName, lastName, ...teacherData } = req.body;
+  const { email, password, firstName, lastName, teacherId, ...teacherData } = req.body;
 
-  // Create user account
-  const user = await User.create({
-    email,
-    password,
-    firstName,
-    lastName,
-    role: 'TEACHER'
-  });
+  // First check if email exists
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    // If user exists, check if they already have a teacher profile
+    const existingTeacher = await Teacher.findOne({ user: existingUser._id });
+    if (existingTeacher) {
+      // Delete uploaded file if exists
+      if (req.file) {
+        deleteFile(req.file.path);
+      }
+      throw new APIError('Email already registered as a teacher', 400);
+    }
+    // If no teacher profile, we'll update the user later
+  }
 
-  // Create teacher profile
-  const teacher = await Teacher.create({
-    user: user._id,
-    ...teacherData
-  });
+  // Check if teacherId exists if provided
+  if (teacherId) {
+    const existingTeacherId = await Teacher.findOne({ teacherId });
+    if (existingTeacherId) {
+      // Delete uploaded file if exists
+      if (req.file) {
+        deleteFile(req.file.path);
+      }
+      throw new APIError('Teacher ID already exists', 400);
+    }
+  }
 
-  successResponse(res, 201, 'Teacher created successfully', {
-    teacher: await teacher.populate('user', '-password')
-  });
+  // Start a transaction
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    let user;
+    if (existingUser) {
+      // Update existing user
+      user = await User.findByIdAndUpdate(
+        existingUser._id,
+        {
+          firstName,
+          lastName,
+          password, // Note: password will be hashed by the User model pre-save middleware
+          role: 'TEACHER',
+          image: req.file ? req.file.path.replace('public/', '') : existingUser.image
+        },
+        { new: true, session }
+      );
+    } else {
+      // Create new user
+      user = await User.create([{
+        email,
+        password,
+        firstName,
+        lastName,
+        role: 'TEACHER',
+        image: req.file ? req.file.path.replace('public/', '') : null
+      }], { session });
+      user = user[0]; // Create returns an array when used with session
+    }
+
+    // Create teacher profile
+    const teacher = await Teacher.create([{
+      user: user._id,
+      teacherId,
+      ...teacherData
+    }], { session });
+
+    // Commit the transaction
+    await session.commitTransaction();
+
+    // Get the complete teacher data with populated user
+    const populatedTeacher = await Teacher.findById(teacher[0]._id)
+      .populate('user', '-password');
+
+    successResponse(res, 201, 'Teacher created successfully', { teacher: populatedTeacher });
+  } catch (error) {
+    // If anything fails, abort the transaction and delete uploaded file
+    await session.abortTransaction();
+    if (req.file) {
+      deleteFile(req.file.path);
+    }
+    throw error;
+  } finally {
+    // End the session
+    session.endSession();
+  }
 });
 
 exports.updateTeacher = asyncHandler(async (req, res) => {
@@ -228,9 +362,17 @@ exports.getNotices = asyncHandler(async (req, res) => {
 });
 
 exports.createNotice = asyncHandler(async (req, res) => {
+  // Process attachments if any
+  const attachments = req.files ? req.files.map(file => ({
+    filename: file.originalname,
+    path: file.path.replace('public/', ''),
+    mimetype: file.mimetype
+  })) : [];
+
   const notice = await Notice.create({
     ...req.body,
-    createdBy: req.user._id
+    createdBy: req.user._id,
+    attachments
   });
 
   successResponse(res, 201, 'Notice created successfully', {
@@ -239,25 +381,57 @@ exports.createNotice = asyncHandler(async (req, res) => {
 });
 
 exports.updateNotice = asyncHandler(async (req, res) => {
-  const notice = await Notice.findByIdAndUpdate(
-    req.params.id,
-    req.body,
-    { new: true, runValidators: true }
-  ).populate('createdBy', 'firstName lastName');
-
+  const notice = await Notice.findById(req.params.id);
   if (!notice) {
+    // Delete uploaded files if notice not found
+    if (req.files) {
+      req.files.forEach(file => deleteFile(file.path));
+    }
     throw new APIError('Notice not found', 404);
   }
 
-  successResponse(res, 200, 'Notice updated successfully', notice);
+  // Process new attachments if any
+  if (req.files && req.files.length > 0) {
+    const newAttachments = req.files.map(file => ({
+      filename: file.originalname,
+      path: file.path.replace('public/', ''),
+      mimetype: file.mimetype
+    }));
+
+    // If removeAttachments is true, remove old attachments
+    if (req.body.removeAttachments === 'true') {
+      // Delete old attachment files
+      notice.attachments.forEach(attachment => {
+        deleteFile('public/' + attachment.path);
+      });
+      notice.attachments = newAttachments;
+    } else {
+      // Append new attachments to existing ones
+      notice.attachments.push(...newAttachments);
+    }
+  }
+
+  // Update other fields
+  Object.assign(notice, req.body);
+  await notice.save();
+
+  successResponse(res, 200, 'Notice updated successfully', {
+    notice: await notice.populate('createdBy', 'firstName lastName')
+  });
 });
 
 exports.deleteNotice = asyncHandler(async (req, res) => {
-  const notice = await Notice.findByIdAndDelete(req.params.id);
+  const notice = await Notice.findById(req.params.id);
   if (!notice) {
     throw new APIError('Notice not found', 404);
   }
 
+  // Delete all attachment files
+  notice.attachments.forEach(attachment => {
+    deleteFile('public/' + attachment.path);
+  });
+
+  await notice.delete();
   successResponse(res, 200, 'Notice deleted successfully');
 });
 

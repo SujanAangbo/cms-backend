@@ -9,7 +9,6 @@ const studentSchema = new mongoose.Schema({
   },
   studentId: {
     type: String,
-    required: true,
     unique: true
   },
   department: {
@@ -51,6 +50,27 @@ const studentSchema = new mongoose.Schema({
 // Virtual for full name
 studentSchema.virtual('fullName').get(function() {
   return `${this.user.firstName} ${this.user.lastName}`;
+});
+
+// Pre-save middleware to generate studentId
+studentSchema.pre('save', async function(next) {
+  if (!this.studentId) {
+    // Find the highest existing studentId
+    const highestStudent = await this.constructor.findOne({}, { studentId: 1 })
+      .sort({ studentId: -1 })
+      .lean();
+
+    let nextNumber = 1;
+    if (highestStudent && highestStudent.studentId) {
+      // Extract the number from existing highest studentId (e.g., "STU001" -> 1)
+      const currentNumber = parseInt(highestStudent.studentId.replace('STU', ''));
+      nextNumber = currentNumber + 1;
+    }
+
+    // Generate the new studentId with padding (e.g., 1 -> "STU001")
+    this.studentId = `STU${nextNumber.toString().padStart(3, '0')}`;
+  }
+  next();
 });
 
 // Index for faster queries
