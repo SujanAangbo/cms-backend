@@ -22,8 +22,8 @@ connectDB();
 // Middleware
 app.use(helmet()); // Security headers
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true // Allow cookies to be sent with requests
+  origin: 'http://127.0.0.1:5500', // <-- set to your frontend's URL
+  credentials: true,
 })); // Enable CORS
 app.use(morgan('dev')); // HTTP request logger
 app.use(compression()); // Compress responses
