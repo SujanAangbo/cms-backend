@@ -86,7 +86,7 @@ exports.login = asyncHandler(async (req, res) => {
   }
 
   // Send response without tokens in body
-  successResponse(res, 200, 'Login successful', { user: userData });
+  successResponse(res, 200, 'Login successful', { user: userData, accessToken: tokens.accessToken, refreshToken: tokens.refreshToken });
 });
 
 /**
