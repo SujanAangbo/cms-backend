@@ -34,7 +34,6 @@ router.put(
 // Notice routes
 router.get(
   '/notices',
-  validatePagination,
   studentController.getNotices
 );
 

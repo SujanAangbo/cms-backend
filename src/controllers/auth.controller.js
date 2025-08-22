@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
-const { APIError, asyncHandler, successResponse } = require('../utils/response.util');
+const { APIError, asyncHandler, successResponse, errorResponse } = require('../utils/response.util');
 const User = require('../models/user.model');
 const Student = require('../models/student.model');
 const Teacher = require('../models/teacher.model');
@@ -42,7 +42,8 @@ exports.login = asyncHandler(async (req, res) => {
   // Check if password matches
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
-    throw new APIError('Invalid credentials', 401);
+    return errorResponse(res, 401, "Invalid credentials!");
+    // throw new APIError('Invalid credentials', 401);
   }
 
   if (!user.isActive) {
@@ -66,10 +67,10 @@ exports.login = asyncHandler(async (req, res) => {
 
   // Generate tokens
   const tokens = generateTokens(user._id, user.role);
-  
+
   // Set cookies
   res.cookie('accessToken', tokens.accessToken);
-  
+
   res.cookie('refreshToken', tokens.refreshToken);
 
   const userData = {
@@ -98,7 +99,7 @@ exports.logout = asyncHandler(async (req, res) => {
   // Clear cookies
   res.clearCookie('accessToken');
   res.clearCookie('refreshToken');
-  
+
   successResponse(res, 200, 'Logout successful');
 });
 
@@ -224,7 +225,7 @@ exports.getCurrentUser = asyncHandler(async (req, res) => {
 exports.refreshToken = asyncHandler(async (req, res) => {
   // Get refresh token from cookie
   const refreshToken = req.cookies.refreshToken;
-  
+
   if (!refreshToken) {
     throw new APIError('No refresh token provided', 401);
   }
@@ -232,7 +233,7 @@ exports.refreshToken = asyncHandler(async (req, res) => {
   try {
     // Verify refresh token
     const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-    
+
     // Check if user still exists
     const user = await User.findById(decoded.userId);
     if (!user) {

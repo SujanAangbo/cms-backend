@@ -32,14 +32,6 @@ exports.validateObjectId = (req, res, next) => {
   next();
 };
 
-/**
- * Placeholder for pagination parameters (no pagination)
- */
-exports.validatePagination = (req, res, next) => {
-  // No pagination needed
-  req.pagination = { page: 1, limit: 1000000 };
-  next();
-};
 
 /**
  * Validate date range parameters

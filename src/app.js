@@ -6,12 +6,14 @@ const compression = require('compression');
 const cookieParser = require('cookie-parser');
 const connectDB = require('./config/database');
 const { errorHandler, notFound } = require('./middlewares/error.middleware');
+const path = require('path');
 
 // Import routes
 const authRoutes = require('./routes/auth.routes');
 const studentRoutes = require('./routes/student.routes');
 const teacherRoutes = require('./routes/teacher.routes');
 const adminRoutes = require('./routes/admin.routes');
+const staticRoutes = require('./routes/static_routes');
 
 // Initialize express app
 const app = express();
@@ -19,12 +21,13 @@ const app = express();
 // Connect to database
 connectDB();
 
-// Middleware
+// Middleware`
 app.use(helmet()); // Security headers
 app.use(cors({
   origin: 'http://127.0.0.1:5500', // <-- set to your frontend's URL
   credentials: true,
 })); // Enable CORS
+
 app.use(morgan('dev')); // HTTP request logger
 app.use(compression()); // Compress responses
 app.use(express.json()); // Parse JSON bodies
@@ -33,6 +36,13 @@ app.use(cookieParser()); // Parse cookies
 
 // Serve static files from the public directory
 app.use(express.static('public'));
+
+app.use('/uploads', express.static('uploads', {
+  setHeaders: (res, path) => {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET');
+  }
+}));
 
 // Health check route
 app.get('/health', (req, res) => {
@@ -49,6 +59,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/student', studentRoutes);
 app.use('/api/teacher', teacherRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api', staticRoutes);
 
 // Handle 404 routes
 app.use(notFound);

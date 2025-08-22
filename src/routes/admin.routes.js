@@ -9,11 +9,11 @@ const { upload } = require('../utils/upload.util');
 const router = express.Router();
 
 // Protect all routes
-router.use(auth);
-router.use(checkRole('ADMIN'));
+// router.use(auth);
+// router.use(checkRole('ADMIN'));
 
 // Profile routes
-router.get('/profile', adminController.getProfile);
+// router.get('/profile', adminController.getProfile);
 
 router.put(
   '/profile',
@@ -31,7 +31,6 @@ router.put(
 // Student management routes
 router.get(
   '/students',
-  validatePagination,
   adminController.getStudents
 );
 
@@ -103,7 +102,9 @@ router.post(
       .matches(/^\+?[1-9]\d{1,14}$/)
       .withMessage('Invalid phone number format')
   ],
-  validateRequest,
+  // validateRequest,
+  // auth,
+  // checkRole('ADMIN'),
   adminController.createStudent
 );
 
@@ -139,7 +140,6 @@ router.delete(
 // Teacher management routes
 router.get(
   '/teachers',
-  validatePagination,
   adminController.getTeachers
 );
 
@@ -201,7 +201,7 @@ router.post(
       .matches(/^\+?[1-9]\d{1,14}$/)
       .withMessage('Invalid phone number format')
   ],
-  validateRequest,
+  // validateRequest,
   adminController.createTeacher
 );
 
@@ -229,13 +229,12 @@ router.delete(
 // Notice management routes
 router.get(
   '/notices',
-  validatePagination,
   adminController.getNotices
 );
 
 router.post(
   '/notices',
-  upload.array('attachments', 5), // Allow up to 5 attachments
+  upload.single('attachments'),
   [
     body('title')
       .trim()
@@ -266,7 +265,7 @@ router.post(
       .toDate()
       .withMessage('Invalid expiry date')
   ],
-  validateRequest,
+  // validateRequest,
   adminController.createNotice
 );
 

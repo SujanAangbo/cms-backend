@@ -347,37 +347,30 @@ exports.deleteTeacher = asyncHandler(async (req, res) => {
  */
 
 exports.getNotices = asyncHandler(async (req, res) => {
-  const { targetAudience, department, isActive } = req.query;
+
+  console.log("here inside ");
+
+  const { targetAudience} = req.query;
+
+  console.log("targetAudience" + targetAudience);
 
   const query = {};
-  if (targetAudience) query.targetAudience = targetAudience;
-  if (department) query.department = department;
-  if (isActive !== undefined) query.isActive = isActive;
+  if (targetAudience) query.targetAudience = [targetAudience, "ALL"];
 
   const notices = await Notice.find(query)
-    .populate('createdBy', 'firstName lastName')
-    .sort({ priority: -1, createdAt: -1 });
+    .sort({createdAt: -1 });
 
   successResponse(res, 200, 'Notices retrieved successfully', notices);
 });
 
-exports.createNotice = asyncHandler(async (req, res) => {
-  // Process attachments if any
-  const attachments = req.files ? req.files.map(file => ({
-    filename: file.originalname,
-    path: file.path.replace('public/', ''),
-    mimetype: file.mimetype
-  })) : [];
+exports.createNotice = asyncHandler(async (req, res) => {  
 
   const notice = await Notice.create({
     ...req.body,
-    createdBy: req.user._id,
-    attachments
+    'attachments': req.file ? req.file.path.replace('public/', '') : null,
   });
 
-  successResponse(res, 201, 'Notice created successfully', {
-    notice: await notice.populate('createdBy', 'firstName lastName')
-  });
+  successResponse(res, 201, 'Notice created successfully', {notice},);
 });
 
 exports.updateNotice = asyncHandler(async (req, res) => {
@@ -416,7 +409,6 @@ exports.updateNotice = asyncHandler(async (req, res) => {
   await notice.save();
 
   successResponse(res, 200, 'Notice updated successfully', {
-    notice: await notice.populate('createdBy', 'firstName lastName')
   });
 });
 

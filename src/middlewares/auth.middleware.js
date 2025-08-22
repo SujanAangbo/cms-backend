@@ -9,6 +9,8 @@ exports.auth = async (req, res, next) => {
   try {
     // Get token from cookies only
     const token = req.cookies.accessToken;
+
+    console.log(req.cookies);
     
     if (!token) {
       throw new APIError('Please log in to access this resource', 401);
